@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<title>觅安 MiAn</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none}
+:root{
+  --c:#E8836A;--cd:#C0644E;--cl:#F4B8A6;--cbg:#FDF0EC;
+  --ww:#FEFBF9;--e:#1A1614;--el:#3D3632;
+  --ts:#8A7E78;--th:#B8AEA7;--bd:rgba(26,22,20,0.08);
+  --serif:'Noto Serif SC','Georgia','Source Han Serif SC','STSong',serif;
+  --sans:-apple-system,'PingFang SC','SF Pro Text','Helvetica Neue','Microsoft YaHei',sans-serif;
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:var(--sans);background:var(--ww);color:var(--e);font-size:16px;line-height:1.5}
+button{font-family:var(--sans);-webkit-appearance:none;border:none;outline:none;cursor:pointer}
+
+/* ===== SCREEN SYSTEM ===== */
+.app{width:100%;height:100%;position:relative;overflow:hidden}
+.s{position:absolute;inset:0;display:flex;flex-direction:column;
+  transform:translateX(100%);opacity:0;transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .28s ease;
+  pointer-events:none;will-change:transform,opacity;background:var(--ww)}
+.s.on{transform:translateX(0);opacity:1;pointer-events:auto}
+.s.out{transform:translateX(-20%);opacity:0}
+
+/* ===== SHARED ===== */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+.btn-m{display:block;width:100%;padding:16px;border-radius:14px;background:var(--c);color:#FFF;font-size:17px;font-weight:500;text-align:center;transition:opacity .15s}
+.btn-m:active{opacity:.8}
+.btn-s{display:block;width:100%;padding:14px;border-radius:14px;background:#FFF;border:1.5px solid var(--bd);color:var(--e);font-size:15px;text-align:center}
+.btn-s:active{border-color:var(--c);background:var(--cbg)}
+
+/* Nav */
+.nav{height:56px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;padding:0 56px}
+.nav-t{font-family:var(--serif);font-size:18px;color:var(--e);font-weight:500;letter-spacing:.06em}
+.nav-back{position:absolute;left:4px;top:0;height:100%;width:52px;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--c)}
+
+/* Tab bar */
+.tabs{display:flex;align-items:flex-start;padding:10px 0 calc(10px + var(--safe-b));background:rgba(254,251,249,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bd);flex-shrink:0}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0}
+.tab-i{font-size:24px;opacity:.28;transition:opacity .2s}
+.tab-l{font-size:11px;color:var(--th);transition:color .2s}
+.tab.on .tab-i{opacity:1}
+.tab.on .tab-l{color:var(--c);font-weight:600}
+.tab-gap{width:80px;flex-shrink:0}
+
+/* Float button */
+.fab-w{position:absolute;bottom:calc(68px + var(--safe-b));left:50%;transform:translateX(-50%);z-index:20}
+.fab{width:72px;height:72px;border-radius:50%;background:var(--c);color:#FFF;display:flex;align-items:center;justify-content:center;flex-direction:column;
+  box-shadow:0 6px 28px rgba(232,131,106,.45),0 0 0 6px rgba(232,131,106,.12);
+  animation:fabp 2.2s ease infinite;transition:transform .12s}
+.fab:active{transform:scale(.9)}
+.fab-icon{font-size:28px;line-height:1}
+.fab-txt{font-size:10px;opacity:.9;margin-top:1px;letter-spacing:.02em}
+@keyframes fabp{0%,100%{box-shadow:0 6px 28px rgba(232,131,106,.45),0 0 0 6px rgba(232,131,106,.12)}50%{box-shadow:0 6px 28px rgba(232,131,106,.55),0 0 0 14px rgba(232,131,106,0)}}
+
+/* ===== SPLASH ===== */
+#sp{align-items:center;justify-content:center;cursor:pointer}
+.sp-box{text-align:center;opacity:0;transform:translateY(18px);animation:fu .9s .3s ease forwards}
+.sp-t{font-family:var(--serif);font-size:52px;color:var(--cd);letter-spacing:.24em;font-weight:400}
+.sp-s{font-family:var(--serif);font-size:12px;color:var(--cd);letter-spacing:.5em;opacity:.4;margin-top:10px}
+.sp-tag{font-family:var(--serif);font-size:13px;color:var(--th);letter-spacing:.2em;margin-top:64px;opacity:0;animation:fu .8s .9s ease forwards}
+.sp-tap{position:absolute;bottom:calc(40px + var(--safe-b));font-size:13px;color:var(--th);opacity:0;animation:fu .5s 1.6s ease forwards}
+@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== HOME ===== */
+.hm-hd{padding:14px 20px 0;display:flex;align-items:center;justify-content:space-between}
+.hm-brand{font-family:var(--serif);font-size:26px;color:var(--cd);letter-spacing:.14em}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--cbg);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--c);font-weight:500}
+.greet{margin:18px 20px 0;padding:20px;background:linear-gradient(135deg,var(--cbg),#FFF7F4);border-radius:18px;border:1px solid rgba(232,131,106,.08)}
+.greet-t{font-family:var(--serif);font-size:16px;color:var(--el);line-height:1.85}
+.greet-from{font-size:12px;color:var(--th);margin-top:10px}
+.stats{display:flex;gap:10px;padding:18px 20px 0}
+.stat{flex:1;background:#FFF;border:1px solid var(--bd);border-radius:16px;padding:14px 8px;text-align:center}
+.stat-n{font-family:var(--serif);font-size:30px;font-weight:500;color:var(--e)}
+.stat-l{font-size:11px;color:var(--ts);margin-top:2px}
+.stat-tag{font-size:10px;margin-top:5px;padding:3px 8px;border-radius:10px;display:inline-block;background:#E8F5E9;color:#2E7D32}
+.sec-h{font-size:14px;font-weight:600;color:var(--e);padding:22px 20px 12px;display:flex;justify-content:space-between;align-items:center}
+.sec-more{font-size:12px;color:var(--th);font-weight:400}
+.mcal{display:flex;gap:6px;padding:0 20px}
+.mcal-d{flex:1;text-align:center;padding:10px 0;border-radius:13px;transition:background .2s}
+.mcal-dn{font-size:11px;color:var(--th)}
+.mcal-dd{font-size:18px;font-weight:600;color:var(--e);margin-top:4px}
+.mcal-dot{width:5px;height:5px;border-radius:50%;margin:4px auto 0}
+.mcal-d.td{background:var(--c)}
+.mcal-d.td .mcal-dn{color:rgba(255,255,255,.7)}
+.mcal-d.td .mcal-dd{color:#FFF}
+.dcard{margin:18px 20px 0;padding:16px;background:#FFF;border:1px solid var(--bd);border-radius:16px;display:flex;gap:14px;align-items:center;transition:background .15s}
+.dcard:active{background:var(--cbg)}
+.dpic{width:50px;height:50px;border-radius:50%;background:var(--cbg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.dinfo{flex:1}
+.dname{font-size:15px;font-weight:600;color:var(--e)}
+.ddept{font-size:12px;color:var(--ts);margin-top:3px;line-height:1.45}
+.dbadge{font-size:11px;color:var(--c);background:var(--cbg);padding:4px 12px;border-radius:12px;white-space:nowrap;font-weight:500}
+
+/* ===== RECORD ===== */
+.rec{align-items:center;justify-content:center;padding:0 32px}
+.rec-time{font-size:13px;color:var(--th);margin-bottom:6px}
+.rec-care{font-family:var(--serif);font-size:22px;color:var(--el);line-height:1.85;text-align:center;margin-bottom:32px}
+.rec-care em{font-style:normal;color:var(--c)}
+.q-lbl{font-size:15px;color:var(--ts);margin-bottom:16px}
+.q-opts{display:flex;gap:12px;width:100%;margin-bottom:32px}
+.q-b{flex:1;padding:18px 10px;border-radius:16px;border:1.5px solid var(--bd);background:#FFF;text-align:center;transition:all .2s}
+.q-b:active,.q-b.sel{border-color:var(--c);background:var(--cbg)}
+.q-bt{font-size:16px;color:var(--e);font-weight:500}
+.q-bs{font-size:11px;color:var(--th);margin-top:4px}
+.q-b.sel .q-bt{color:var(--cd)}
+.skip{font-size:14px;color:var(--th);background:none;padding:10px}
+.nrs-n{font-family:var(--serif);font-size:72px;font-weight:500;color:var(--c);text-align:center;line-height:1;transition:opacity .15s}
+.nrs-l{font-size:14px;color:var(--ts);text-align:center;margin:6px 0 20px}
+.nrs-sl{-webkit-appearance:none;width:100%;height:8px;border-radius:4px;background:linear-gradient(to right,var(--cl),var(--c));outline:none}
+.nrs-sl::-webkit-slider-thumb{-webkit-appearance:none;width:34px;height:34px;border-radius:50%;background:#FFF;border:3px solid var(--c);box-shadow:0 2px 12px rgba(232,131,106,.35)}
+.nrs-r{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--th)}
+
+/* ===== COMPLETE ===== */
+.comp-ck{width:88px;height:88px;border-radius:50%;background:var(--cbg);display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:pop .5s ease}
+.comp-msg{font-family:var(--serif);font-size:26px;color:var(--e);text-align:center;line-height:1.6}
+.comp-sub{font-size:14px;color:var(--ts);margin-top:8px;text-align:center;line-height:1.6}
+.comp-care{margin-top:32px;padding:22px;background:linear-gradient(135deg,var(--cbg),#FFF7F4);border-radius:18px;border:1px solid rgba(232,131,106,.08);width:100%}
+.comp-ct{font-family:var(--serif);font-size:15px;color:var(--el);line-height:1.9;text-align:center}
+.comp-cs{font-size:12px;color:var(--th);text-align:center;margin-top:10px}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ===== HISTORY ===== */
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 20px}
+.cal-h{text-align:center;font-size:12px;color:var(--th);padding:6px 0}
+.cal-c{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:14px;color:var(--e);font-weight:500}
+.cal-c.em{color:transparent}
+.cal-c.p1{background:rgba(232,131,106,.12)}
+.cal-c.p2{background:rgba(232,131,106,.28)}
+.cal-c.p3{background:rgba(232,131,106,.55);color:#FFF}
+.cal-c.now{outline:2.5px solid var(--c);outline-offset:-2px}
+.lgd{display:flex;gap:16px;padding:12px 20px;justify-content:center}
+.lgd-i{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--th)}
+.lgd-d{width:12px;height:12px;border-radius:3px}
+.sum{margin:16px 20px;padding:20px;background:#FFF;border:1px solid var(--bd);border-radius:18px}
+.sum-t{font-family:var(--serif);font-size:16px;color:var(--e);font-weight:500;margin-bottom:12px}
+.sum-r{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bd);font-size:14px}
+.sum-r:last-of-type{border-bottom:none}
+.sum-k{color:var(--ts)}
+.sum-v{color:var(--e);font-weight:600}
+.sum-al{margin-top:12px;padding:12px 14px;background:#FFF3E0;border-radius:12px;font-size:13px;color:#E65100;line-height:1.55}
+
+/* ===== DOCTOR ===== */
+.ds{margin:18px 20px;padding:20px;background:#FFF;border:1px solid var(--bd);border-radius:18px}
+.ds-sec{margin-bottom:16px}
+.ds-sec:last-child{margin-bottom:0}
+.ds-st{font-size:13px;color:var(--c);font-weight:600;letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.ds-sb{font-size:14px;color:var(--el);line-height:1.85}
+.ds-hl{display:inline;background:var(--cbg);color:var(--cd);padding:2px 8px;border-radius:5px;font-weight:600}
+.ds-ft{padding:10px 20px;font-size:12px;color:var(--th);text-align:center;line-height:1.55}
+.copied{background:#2E7D32!important;transition:background .3s}
+
+/* Demo badge */
+.badge{position:fixed;top:calc(8px + var(--safe-t));left:50%;transform:translateX(-50%);
+  background:rgba(26,22,20,.65);color:#FFF;font-size:11px;padding:5px 16px;border-radius:20px;z-index:999;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);pointer-events:none;letter-spacing:.06em}
+</style>
+</head>
+<body>
+
+<div class="badge">觅安 Demo · 可交互原型</div>
+
+<div class="app" id="app">
+
+  <!-- SPLASH -->
+  <div class="s on" id="sp" onclick="go('hm')">
+    <div class="sp-box">
+      <div class="sp-t">觅安</div>
+      <div class="sp-s">M I A N</div>
+    </div>
+    <div class="sp-tag">寻觅安宁 · 与痛共处</div>
+    <div class="sp-tap">轻触进入</div>
+  </div>
+
+  <!-- HOME -->
+  <div class="s" id="hm">
+    <div class="scroll" style="padding:calc(8px + var(--safe-t)) 0 calc(100px + var(--safe-b))">
+      <div class="hm-hd">
+        <div class="hm-brand">觅安</div>
+        <div class="avatar">张</div>
+      </div>
+      <div class="greet">
+        <div class="greet-t">「早安，张女士。昨夜睡眠还好吗？<br>新的一天，觅安陪着你。」</div>
+        <div class="greet-from">—— 觅安 · 每日关怀</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-n">7</div><div class="stat-l">本月发作</div><div class="stat-tag">↓ 少3天</div></div>
+        <div class="stat"><div class="stat-n">5.2</div><div class="stat-l">平均NRS</div><div class="stat-tag">↓ 0.8</div></div>
+        <div class="stat"><div class="stat-n">89%</div><div class="stat-l">用药依从</div><div class="stat-tag">良好</div></div>
+      </div>
+      <div class="sec-h"><span>本周记录</span><span class="sec-more" onclick="event.stopPropagation();go('hi')">查看全部 ›</span></div>
+      <div class="mcal">
+        <div class="mcal-d"><div class="mcal-dn">一</div><div class="mcal-dd">20</div><div class="mcal-dot" style="background:var(--c)"></div></div>
+        <div class="mcal-d"><div class="mcal-dn">二</div><div class="mcal-dd">21</div><div class="mcal-dot"></div></div>
+        <div class="mcal-d"><div class="mcal-dn">三</div><div class="mcal-dd">22</div><div class="mcal-dot" style="background:var(--c)"></div></div>
+        <div class="mcal-d"><div class="mcal-dn">四</div><div class="mcal-dd">23</div><div class="mcal-dot"></div></div>
+        <div class="mcal-d"><div class="mcal-dn">五</div><div class="mcal-dd">24</div><div class="mcal-dot" style="background:var(--c)"></div></div>
+        <div class="mcal-d"><div class="mcal-dn">六</div><div class="mcal-dd">25</div><div class="mcal-dot"></div></div>
+        <div class="mcal-d td"><div class="mcal-dn">日</div><div class="mcal-dd">26</div><div class="mcal-dot"></div></div>
+      </div>
+      <div class="dcard" onclick="go('dc')">
+        <div class="dpic">👨‍⚕️</div>
+        <div class="dinfo">
+          <div class="dname">我的主治医生</div>
+          <div class="ddept">徐州矿务集团总医院 · 疼痛科<br>副主任医师</div>
+        </div>
+        <div class="dbadge">AI摘要 ›</div>
+      </div>
+      <div style="height:24px"></div>
+    </div>
+    <div class="fab-w"><button class="fab" onclick="event.stopPropagation();go('r1')"><span class="fab-icon">⊕</span><span class="fab-txt">头痛了</span></button></div>
+    <div class="tabs">
+      <div class="tab on"><div class="tab-i">🏠</div><div class="tab-l">首页</div></div>
+      <div class="tab" onclick="go('hi')"><div class="tab-i">📅</div><div class="tab-l">记录</div></div>
+      <div class="tab-gap"></div>
+      <div class="tab" onclick="go('dc')"><div class="tab-i">📊</div><div class="tab-l">报告</div></div>
+      <div class="tab"><div class="tab-i">👤</div><div class="tab-l">我的</div></div>
+    </div>
+  </div>
+
+  <!-- RECORD 1 -->
+  <div class="s rec" id="r1">
+    <div class="rec-time">已记录发作时间 · 3月26日 14:23</div>
+    <div class="rec-care">你不是一个人在扛。<br><em>觅安在这里。</em></div>
+    <div class="q-lbl">发作前有没有先兆？</div>
+    <div class="q-opts">
+      <div class="q-b" onclick="selA(this,'有')"><div class="q-bt">有先兆</div><div class="q-bs">闪光/暗点/麻木</div></div>
+      <div class="q-b" onclick="selA(this,'无')"><div class="q-bt">没有</div></div>
+      <div class="q-b" onclick="selA(this,'?')"><div class="q-bt">不确定</div></div>
+    </div>
+    <button class="skip" onclick="go('r2')">跳过，直接记录疼痛 ›</button>
+  </div>
+
+  <!-- RECORD 2 -->
+  <div class="s rec" id="r2">
+    <div style="font-size:13px;color:var(--th);margin-bottom:24px">快好了，最后一步</div>
+    <div style="width:100%;margin-bottom:32px">
+      <div class="nrs-n" id="nV">5</div>
+      <div class="nrs-l" id="nL">中度疼痛</div>
+      <input type="range" class="nrs-sl" min="1" max="10" value="5" oninput="uN(this.value)">
+      <div class="nrs-r"><span>1 轻微</span><span>10 剧烈</span></div>
+    </div>
+    <button class="btn-m" onclick="go('cp')" style="width:100%">记录完成</button>
+    <button class="skip" onclick="go('hm')">取消</button>
+  </div>
+
+  <!-- COMPLETE -->
+  <div class="s rec" id="cp">
+    <div class="comp-ck">
+      <svg width="38" height="38" viewBox="0 0 36 36" fill="none"><path d="M8 18l7 7 13-13" stroke="#E8836A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="comp-msg">今天辛苦了<br>你很勇敢</div>
+    <div class="comp-sub" id="cS">发作已记录 · NRS 5 · 无先兆<br>14:23 - 进行中</div>
+    <div class="comp-care">
+      <div class="comp-ct">「疼痛是身体在说话，<br>而你选择了倾听它。<br>这本身就是了不起的事。」</div>
+      <div class="comp-cs">—— 觅安 · 陪你度过每一次发作</div>
+    </div>
+    <div style="margin-top:28px;width:100%;display:flex;flex-direction:column;gap:10px">
+      <button class="btn-s" onclick="go('hm')">回到首页</button>
+      <button class="skip" style="text-align:center">稍后补充诱因和用药 ›</button>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="s" id="hi">
+    <div style="padding-top:calc(4px + var(--safe-t))"></div>
+    <div class="nav"><div class="nav-back" onclick="go('hm')">‹</div><div class="nav-t">头痛日历</div></div>
+    <div class="scroll" style="padding-bottom:calc(60px + var(--safe-b))">
+      <div style="font-size:15px;color:var(--ts);padding:12px 20px 10px;font-weight:500">2026年3月</div>
+      <div class="cal-g">
+        <div class="cal-h">一</div><div class="cal-h">二</div><div class="cal-h">三</div><div class="cal-h">四</div><div class="cal-h">五</div><div class="cal-h">六</div><div class="cal-h">日</div>
+        <div class="cal-c em">.</div><div class="cal-c em">.</div><div class="cal-c em">.</div><div class="cal-c em">.</div><div class="cal-c em">.</div><div class="cal-c em">.</div>
+        <div class="cal-c">1</div><div class="cal-c p1">2</div><div class="cal-c">3</div><div class="cal-c p2">4</div><div class="cal-c p3">5</div><div class="cal-c">6</div><div class="cal-c">7</div>
+        <div class="cal-c p1">8</div><div class="cal-c">9</div><div class="cal-c p1">10</div><div class="cal-c">11</div><div class="cal-c p2">12</div><div class="cal-c">13</div><div class="cal-c">14</div>
+        <div class="cal-c p3">15</div><div class="cal-c p2">16</div><div class="cal-c">17</div><div class="cal-c p1">18</div><div class="cal-c">19</div><div class="cal-c p1">20</div><div class="cal-c">21</div>
+        <div class="cal-c p2">22</div><div class="cal-c">23</div><div class="cal-c p1">24</div><div class="cal-c">25</div><div class="cal-c now">26</div><div class="cal-c">27</div><div class="cal-c">28</div>
+        <div class="cal-c">29</div><div class="cal-c">30</div><div class="cal-c">31</div>
+      </div>
+      <div class="lgd">
+        <div class="lgd-i"><div class="lgd-d" style="background:rgba(232,131,106,.12)"></div>轻度</div>
+        <div class="lgd-i"><div class="lgd-d" style="background:rgba(232,131,106,.28)"></div>中度</div>
+        <div class="lgd-i"><div class="lgd-d" style="background:rgba(232,131,106,.55)"></div>重度</div>
+      </div>
+      <div class="sum">
+        <div class="sum-t">3月摘要</div>
+        <div class="sum-r"><span class="sum-k">发作天数</span><span class="sum-v">10 天</span></div>
+        <div class="sum-r"><span class="sum-k">平均NRS</span><span class="sum-v">5.2 分</span></div>
+        <div class="sum-r"><span class="sum-k">有先兆发作</span><span class="sum-v">2 次</span></div>
+        <div class="sum-r"><span class="sum-k">最常见诱因</span><span class="sum-v">睡眠不足</span></div>
+        <div class="sum-r" style="border:none"><span class="sum-k">急性用药</span><span class="sum-v">布洛芬 × 8次</span></div>
+        <div class="sum-al">⚠️ 布洛芬本月使用8次，接近MOH风险阈值（10次/月），请关注用药频率。</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab" onclick="go('hm')"><div class="tab-i">🏠</div><div class="tab-l">首页</div></div>
+      <div class="tab on"><div class="tab-i">📅</div><div class="tab-l">记录</div></div>
+      <div class="tab-gap"></div>
+      <div class="tab" onclick="go('dc')"><div class="tab-i">📊</div><div class="tab-l">报告</div></div>
+      <div class="tab"><div class="tab-i">👤</div><div class="tab-l">我的</div></div>
+    </div>
+  </div>
+
+  <!-- DOCTOR -->
+  <div class="s" id="dc">
+    <div style="padding-top:calc(4px + var(--safe-t))"></div>
+    <div class="nav"><div class="nav-back" onclick="go('hm')">‹</div><div class="nav-t">AI 就诊摘要</div></div>
+    <div class="scroll" style="padding-bottom:calc(60px + var(--safe-b))">
+      <div style="padding:8px 20px 0;font-size:13px;color:var(--th)">自动生成 · 2026年3月26日</div>
+      <div class="ds">
+        <div class="ds-sec"><div class="ds-st">📊 发作概况</div><div class="ds-sb">本月发作 <span class="ds-hl">10天</span>（上月13天，↓23%），平均NRS <span class="ds-hl">5.2分</span>（上月6.0，↓0.8）。总体呈改善趋势。</div></div>
+        <div class="ds-sec"><div class="ds-st">💊 用药情况</div><div class="ds-sb">急性用药：布洛芬 8次/月（未超MOH阈值，需持续关注）<br>预防药依从性：<span class="ds-hl">89%</span>（较上月76%明显提升）<br>漏服集中在周末</div></div>
+        <div class="ds-sec"><div class="ds-st">🔍 AI 诱因分析</div><div class="ds-sb">① 睡眠不足（相关性 <span class="ds-hl">78%</span>）— 睡眠＜6h次日发作概率显著升高<br>② 月经周期 — 经前2天集中发作<br>③ 压力 — 周一发作频率偏高</div></div>
+        <div class="ds-sec"><div class="ds-st">⚠️ 需关注</div><div class="ds-sb">· 本月新增视觉先兆2次（闪光），较既往增多<br>· 建议评估是否需要调整预防方案<br>· 建议强调周末按时服药</div></div>
+        <div class="ds-sec"><div class="ds-st">📋 患者自述</div><div class="ds-sb" style="font-style:italic;color:var(--ts)">"这个月感觉好多了，但有两次看到闪光，以前没有过。周末偶尔忘记吃药。"</div></div>
+      </div>
+      <div class="ds-ft">徐州矿务集团总医院 · 疼痛科<br>AI辅助生成 · 仅供临床参考</div>
+      <div style="padding:0 20px 20px"><button class="btn-m" id="cpB" onclick="doC()">一键复制到病历</button></div>
+    </div>
+    <div class="tabs">
+      <div class="tab" onclick="go('hm')"><div class="tab-i">🏠</div><div class="tab-l">首页</div></div>
+      <div class="tab" onclick="go('hi')"><div class="tab-i">📅</div><div class="tab-l">记录</div></div>
+      <div class="tab-gap"></div>
+      <div class="tab on"><div class="tab-i">📊</div><div class="tab-l">报告</div></div>
+      <div class="tab"><div class="tab-i">👤</div><div class="tab-l">我的</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var cur='sp',aura='无',nrs=5;
+var NL=['','轻微不适','轻度疼痛','轻度疼痛','中度疼痛','中度疼痛','较重疼痛','较重疼痛','重度疼痛','剧烈疼痛','无法忍受'];
+function go(id){
+  if(id===cur)return;
+  var o=document.getElementById(cur),n=document.getElementById(id);
+  o.classList.remove('on');o.classList.add('out');
+  n.classList.add('on');
+  setTimeout(function(){o.classList.remove('out')},320);
+  cur=id;
+  if(navigator.vibrate)navigator.vibrate(8);
+}
+function selA(el,v){
+  aura=v;
+  document.querySelectorAll('.q-b').forEach(function(b){b.classList.remove('sel')});
+  el.classList.add('sel');
+  setTimeout(function(){go('r2')},280);
+}
+function uN(v){
+  nrs=+v;
+  var d=document.getElementById('nV');
+  d.textContent=v;d.style.opacity=.3+(nrs/10)*.7;
+  document.getElementById('nL').textContent=NL[nrs];
+  var at=aura==='有'?'有先兆':aura==='?'?'先兆不确定':'无先兆';
+  document.getElementById('cS').innerHTML='发作已记录 · NRS '+nrs+' · '+at+'<br>14:23 - 进行中';
+}
+function doC(){
+  var b=document.getElementById('cpB');
+  b.textContent='已复制 ✓';b.classList.add('copied');
+  setTimeout(function(){b.textContent='一键复制到病历';b.classList.remove('copied')},1500);
+}
+document.body.addEventListener('touchmove',function(e){if(!e.target.closest('.scroll'))e.preventDefault()},{passive:false});
+</script>
+</body>
+</html>
